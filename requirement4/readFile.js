@@ -1,29 +1,26 @@
-const fs = import('fs').promises;
+// Required modules
+import { readFile } from 'fs';
+import { promisify } from 'util';
 
+// Promisify the fs.readFile function
+const readFileAsync = promisify(readFile);
+
+// Attach an 'exit' event listener to the process
 process.on('exit', (code) => {
-  console.log(`'exit' event called with code: ${code}`);
+  console.log(`Process is exiting with code: ${code}`);
 });
 
+// Attach an 'unhandledRejection' event listener to the process
 process.on('unhandledRejection', (reason, promise) => {
-  console.log("'unhandledRejection' event called");
-  throw reason;
+  console.log('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Application specific logging, throwing an error, or other logic here
 });
 
-const readFileSyncPromise = async (filename) => {
-  try {
-    const data = await fs.readFile(filename);
-    return data.toString();
-  } catch (error) {
-    console.error('Error reading file:', error.message);
-    throw error;
-  }
-};
-
-readFileSyncPromise('pom.txt')
-  .then((content) => {
-    console.log('File content:', content);
-  })
-  .catch((error) => {
-    console.error('Error:', error.message);
-    throw new Error('Custom error from catch handler');
-  });
+// Call the promisified readFile function with an incorrect file name
+readFileAsync('nonExistentFile.txt', 'utf8').then((data) => {
+  console.log(data);
+}).catch((error) => {
+  console.error('Error reading file:', error.message);
+  // Throw a new error to trigger 'unhandledRejection'
+  throw new Error('This error is from the catch handler');
+});
